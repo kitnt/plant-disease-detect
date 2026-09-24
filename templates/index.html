@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>植物叶片病害检测</title>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+</head>
+<body>
+    <h1>植物叶片病害检测平台</h1>
+    <button onclick="sendTest()">点我发测试数据</button>
+    <div id="result" style="color: green; margin-top: 20px;"></div>
+
+    <script>
+        const socket = io();
+        socket.on('connect', () => console.log('已连接'));
+        socket.on('server_response', function(msg) {
+            document.getElementById('result').innerText = "后端回应：" + msg.data;
+        });
+        socket.on('detection_result', function(data) {
+            console.log("收到结果：", data);
+            alert("前后端SocketIO通信跑通啦！");
+        });
+        function sendTest() {
+            socket.emit('video_frame', '这是一条测试图片数据');
+        }
+    </script>
+</body>
+</html>
