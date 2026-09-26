@@ -11,7 +11,7 @@ socketio = SocketIO(app, cors_allowed_origins="*")
 
 # 注意：分类模型的权重名通常是 yolov8s-cls.pt，训练出来的叫 best.pt
 # 假设算法组已经训练好了，放在 model/best.pt 里
-model = YOLO('model/best.pt')  
+model = YOLO('yolov8n-cls.pt')  
 
 @app.route('/')
 def index():

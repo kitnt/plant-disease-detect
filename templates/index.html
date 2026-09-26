@@ -5,51 +5,52 @@
     <title>植物叶片病害分类</title>
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
     <style>
-        body { font-family: sans-serif; text-align: center; margin-top: 50px; }
+        body { font-family: sans-serif; text-align: center; margin-top: 40px; }
+        #preview { max-width: 500px; margin: 20px auto; display: block; border: 1px solid #ccc; }
         #result-box { margin-top: 20px; font-size: 24px; color: #2c3e50; }
         button { padding: 10px 20px; font-size: 16px; cursor: pointer; }
     </style>
 </head>
 <body>
     <h1>植物叶片病害分类平台</h1>
-    <p>点击下方按钮，使用分类模型识别叶片病害</p>
-    <button onclick="startCamera()">打开摄像头</button>
+    <p>请上传一张植物叶片图片进行识别</p>
+
+    <input type="file" id="fileInput" accept="image/*" onchange="previewAndSend()">
     <br><br>
-    <video id="video" width="480" height="360" autoplay style="border: 2px solid #ccc;"></video>
-    <canvas id="canvas" width="480" height="360" style="display: none;"></canvas>
-    
+    <img id="preview" src="" alt="图片预览" style="display: none;">
+
     <div id="result-box">等待识别...</div>
 
     <script>
         const socket = io();
-        const video = document.getElementById('video');
-        const canvas = document.getElementById('canvas');
-        const ctx = canvas.getContext('2d');
-        const resultBox = document.getElementById('result-box');
 
         socket.on('connect', () => {
             console.log('已连接');
         });
 
+        // 接收后端识别结果
         socket.on('detection_result', function(data) {
-            resultBox.innerText = `识别结果：${data.class_name}（置信度 ${data.confidence}）`;
+            document.getElementById('result-box').innerText = 
+                `识别结果：${data.class_name}（置信度 ${data.confidence}）`;
         });
 
-        function startCamera() {
-            navigator.mediaDevices.getUserMedia({ video: true })
-                .then(stream => {
-                    video.srcObject = stream;
-                    setInterval(captureAndSend, 300); // 每 300 毫秒发一帧（约 3 FPS，不卡）
-                })
-                .catch(err => {
-                    alert('无法打开摄像头：' + err.message);
-                });
-        }
+        // 上传图片并发送
+        function previewAndSend() {
+            const fileInput = document.getElementById('fileInput');
+            const file = fileInput.files[0];
+            if (!file) return;
 
-        function captureAndSend() {
-            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-            const dataURL = canvas.toDataURL('image/jpeg', 0.8);
-            socket.emit('video_frame', dataURL);
+            // 1. 本地预览
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const preview = document.getElementById('preview');
+                preview.src = e.target.result;
+                preview.style.display = 'block';
+
+                // 2. 通过 SocketIO 发送 base64 给后端
+                socket.emit('video_frame', e.target.result);
+            };
+            reader.readAsDataURL(file);
         }
     </script>
 </body>
